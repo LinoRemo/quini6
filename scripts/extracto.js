@@ -35,13 +35,17 @@ function parseExtracto(html) {
   if (!mes || !srt || !MESES.includes(mes[1].toLowerCase())) return null;
   const ini = html.indexOf('id="extractos"');
   if (ini < 0) return null;
-  const L = htmlATexto(html.slice(ini));
   const dia = +srt[2], mi = MESES.indexOf(mes[1].toLowerCase()) + 1, anio = +mes[2], nro = +srt[3];
-  const out = {
+  return parseSecciones(htmlATexto(html.slice(ini)), {
     nro, fecha: `${anio}-${f2(mi)}-${f2(dia)}`, fechaCorta: `${f2(dia)}/${f2(mi)}/${anio}`,
     fechaTexto: `${srt[1].toLowerCase()} ${f2(dia)}/${f2(mi)}/${anio}`,
     fuente: "Lotería de Santa Fe – extracto oficial", actualizado: new Date().toISOString()
-  };
+  });
+}
+
+// Recibe el extracto como renglones con las celdas separadas por tabulador
+// (igual en la página web y en el PDF) y completa las 5 modalidades.
+function parseSecciones(L, out) {
   const heads = [["tradicional", /^TRADICIONAL PRIMER SORTEO$/i], ["segunda", /^TRADICIONAL LA SEGUNDA/i], ["revancha", /^REVANCHA$/i],
     ["siempreSale", /^SIEMPRE SALE$/i], ["pozoExtra", /^(PREMIO|POZO) EXTRA$/i]];
   const idx = heads.map(([k, re]) => [k, L.findIndex(l => re.test(l))]);
@@ -83,9 +87,58 @@ async function leerUltimoSorteo() {
   return s;
 }
 
+// ---- extracto oficial en PDF ----
+// La página de resultados (puerto 8443) no responde fuera de Argentina, así
+// que el proceso automático de GitHub usa el PDF que la Lotería publica en
+// su sitio principal. Necesita pdfjs-dist (solo se instala en GitHub).
+const URL_PDF = nro => `https://loteriasantafe.gov.ar/uploads/extractosdigitales/Extracto_Sorteo_Q6_${nro}.pdf`;
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+
+// Agrupa las palabras del PDF en renglones (misma altura), de arriba hacia
+// abajo y de izquierda a derecha, con las celdas separadas por tabulador.
+async function pdfARenglones(data) {
+  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const doc = await getDocument({ data: new Uint8Array(data), verbosity: 0 }).promise;
+  const tc = await (await doc.getPage(1)).getTextContent();
+  const filas = new Map();
+  for (const it of tc.items) {
+    const s = it.str.replace(/\s+/g, " ").trim();
+    if (!s) continue;
+    const y = Math.round(it.transform[5]);
+    if (!filas.has(y)) filas.set(y, []);
+    filas.get(y).push({ x: it.transform[4], s });
+  }
+  return [...filas.entries()].sort((a, b) => b[0] - a[0])
+    .map(([, cs]) => cs.sort((a, b) => a.x - b.x).map(c => c.s))
+    // la fila de bolillas viene en un solo renglón: una por renglón, como en la web
+    .flatMap(cs => cs.every(c => /^\d{2}$/.test(c)) ? cs : [cs.join("\t")]);
+}
+
+function parseExtractoPdf(L) {
+  const nro = L.map(l => l.match(/CONCURSO\s+N\S*\s*(\d+)/i)).find(Boolean);
+  const fecha = L.map(l => l.match(/SORTEO REALIZADO EL (\d{2})\/(\d{2})\/(\d{4})/i)).find(Boolean);
+  if (!nro || !fecha) return null;
+  const [, d, m, a] = fecha;
+  const dia = DIAS[new Date(Date.UTC(+a, +m - 1, +d)).getUTCDay()];
+  return parseSecciones(L, {
+    nro: +nro[1], fecha: `${a}-${m}-${d}`, fechaCorta: `${d}/${m}/${a}`, fechaTexto: `${dia} ${d}/${m}/${a}`,
+    fuente: "Lotería de Santa Fe – extracto oficial (PDF)", actualizado: new Date().toISOString()
+  });
+}
+
+// Devuelve el sorteo nro si su PDF ya está publicado, o null si todavía no.
+async function leerSorteoPdf(nro) {
+  const r = await fetch(URL_PDF(nro), { signal: AbortSignal.timeout(30000) });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`El PDF del sorteo ${nro} respondió ${r.status}`);
+  const s = parseExtractoPdf(await pdfARenglones(await r.arrayBuffer()));
+  if (!s || s.nro !== nro) throw new Error(`No pude leer el PDF del sorteo ${nro}: el formato cambió.`);
+  return s;
+}
+
 // Agrega o reemplaza el sorteo en la lista, del más nuevo al más viejo.
 function sumarSorteo(lista, s) {
   return [s, ...lista.filter(x => x.nro !== s.nro)].sort((a, b) => b.nro - a.nro).slice(0, 200);
 }
 
-module.exports = { URL_EXTRACTO, parseExtracto, leerUltimoSorteo, sumarSorteo };
+module.exports = { URL_EXTRACTO, parseExtracto, leerUltimoSorteo, leerSorteoPdf, sumarSorteo };

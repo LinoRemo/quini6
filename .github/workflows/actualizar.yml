@@ -27,6 +27,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - run: npm install --no-save --no-audit --no-fund pdfjs-dist@4.10.38
       - run: node scripts/actualizar.js
       - name: Guardar si hay sorteo nuevo
         run: |
