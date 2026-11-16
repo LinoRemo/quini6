@@ -4,7 +4,7 @@ on:
   schedule:
     # Sorteos: miércoles y domingo a la noche (Argentina, UTC-3) = jueves y lunes de madrugada en UTC
     - cron: "30 1,3,5,11 * * 1,4"
-    # Control diario por si el extracto se publicó tarde
+    # Control diario por si el extracto se publicó tarde (o el proceso falló)
     - cron: "0 15 * * *"
   workflow_dispatch:
   # Probar el proceso cada vez que cambia
