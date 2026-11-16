@@ -1,6 +1,6 @@
 // Permite abrir la app sin conexión: primero intenta la red y, si no hay, usa lo último guardado.
-const CACHE = "quini6-v1";
-const BASE = ["./", "index.html", "manifest.webmanifest", "icono-192.png", "icono-512.png", "data/sorteos.json", "data/jugadas.json"];
+const CACHE = "quini6-v2";
+const BASE = ["./", "index.html", "manifest.webmanifest", "icono-192.png", "icono-512.png", "lib/html2canvas.min.js", "data/sorteos.json", "data/jugadas.json"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting()));
