@@ -18,4 +18,9 @@ const ARCHIVO = path.join(__dirname, "..", "data", "sorteos.json");
   }
   fs.writeFileSync(ARCHIVO, JSON.stringify(sumarSorteo(lista, s), null, 2) + "\n");
   console.log(`Guardado el sorteo ${s.nro} del ${s.fechaCorta}.`);
-})().catch(e => { console.error(e.message || e); process.exit(1); });
+})().catch(e => {
+  const causa = e.cause ? ` (${e.cause.code || ""} ${e.cause.message || e.cause})` : "";
+  // "::error::" deja el motivo visible en el resumen de GitHub Actions
+  console.log(`::error::${e.message || e}${causa}`);
+  process.exit(1);
+});
