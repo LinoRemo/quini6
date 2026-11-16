@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control Quini 6</title>
+<meta name="theme-color" content="#e2621b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: boleta de control — cabecera del sorteo, filtro de búsquedas, cuadro de aciertos, resumen y edición abajo */
+:root{
+  --bg:#f3f4f7; --paper:#ffffff; --ink:#18213a; --muted:#5d6479; --faint:#8d93a5;
+  --line:#dde0e8; --accent:#e2621b; --accent-ink:#ffffff;
+  --mine-bg:#f9cf4a; --mine-ink:#3a2a00;
+  --win-bg:#dff3e4; --win-ink:#14532d; --win-line:#7cc493;
+  --warn-bg:#fdf0dc; --warn-ink:#7a4a06;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11141c; --paper:#1a1f2b; --ink:#e9ebf2; --muted:#a6acbd; --faint:#7a8094;
+  --line:#2c3344; --accent:#f07a37; --accent-ink:#1a0d03;
+  --mine-bg:#f2c53d; --mine-ink:#2e2100;
+  --win-bg:#173322; --win-ink:#a7e8bb; --win-line:#2f7a48;
+  --warn-bg:#3a2a12; --warn-ink:#f5cf94; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11141c; --paper:#1a1f2b; --ink:#e9ebf2; --muted:#a6acbd; --faint:#7a8094;
+  --line:#2c3344; --accent:#f07a37; --accent-ink:#1a0d03;
+  --mine-bg:#f2c53d; --mine-ink:#2e2100;
+  --win-bg:#173322; --win-ink:#a7e8bb; --win-line:#2f7a48;
+  --warn-bg:#3a2a12; --warn-ink:#f5cf94; color-scheme:dark}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-weight:600;font-size:34px;line-height:1;margin:0;letter-spacing:.3px}
+h1 b{color:var(--accent);font-weight:600}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0;letter-spacing:.3px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px}
+.meta .k{color:var(--muted)}
+.meta .v{font-weight:600}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 14px;font-weight:500}
+button:hover{border-color:var(--faint)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button[disabled]{opacity:.55;cursor:default}
+select,input[type=text]{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 10px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;border-radius:0;padding:7px 14px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.status{font-size:13px;color:var(--muted);min-height:20px}
+.status.warn{color:var(--warn-ink);background:var(--warn-bg);padding:6px 10px;border-radius:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px}
+.tablebox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:center;vertical-align:middle}
+th{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.3px;color:var(--muted);background:transparent}
+tr:last-child td{border-bottom:0}
+td.mine{background:var(--mine-bg);color:var(--mine-ink);font-weight:700;font-size:16px;letter-spacing:.6px;white-space:nowrap}
+.cnt{font-weight:600;font-size:17px}
+.hn{display:block;font-size:12px;color:var(--faint)}
+td.zero .cnt{color:var(--faint);font-weight:400}
+td.prize{background:var(--win-bg);color:var(--win-ink);box-shadow:inset 0 0 0 2px var(--win-line)}
+td.prize .hn{color:var(--win-ink)}
+.pz{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.resumen{display:flex;flex-direction:column;gap:10px;max-width:72ch}
+.resumen ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.resumen b{font-weight:600}
+.tot{font-size:16px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:12px}
+summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ ";color:var(--faint)}
+details[open] summary::before{content:"▾ "}
+.dbody{padding:0 16px 16px;display:flex;flex-direction:column;gap:14px}
+.balls{display:flex;flex-wrap:wrap;gap:6px}
+.ball{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--ink);font-weight:600;font-size:13px}
+.modrow{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center}
+@media (max-width:520px){.modrow{grid-template-columns:minmax(0,1fr)}}
+.ml{font-weight:600;font-size:14px}
+.bq{display:flex;flex-direction:column;gap:8px}
+.jg{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.jg .nums{background:var(--mine-bg);color:var(--mine-ink);font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:.6px}
+.jg button{padding:2px 10px;font-size:13px}
+.add{display:flex;gap:8px;flex-wrap:wrap}
+.add input{flex:1 1 180px;min-width:0}
+.err{color:#c2410c;font-size:13px}
+.main{display:flex;flex-direction:column;gap:18px}
+.grupo h2{font-size:26px;color:var(--accent)}
+.grupo{justify-content:space-between}
+.chooser{padding:24px 20px;display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.chooser h2{font-size:24px}
+.choices{display:flex;flex-wrap:wrap;gap:12px;width:100%}
+.choices button{flex:1 1 220px;padding:18px 16px;font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:.3px;border-width:2px}
+.choices button:hover{border-color:var(--accent);color:var(--accent)}
+.foot{font-size:12px;color:var(--faint)}
+.foot a{color:inherit}
+@media (prefers-reduced-motion:no-preference){td.prize{transition:background .2s}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Control <b>Quini 6</b></h1>
+    <div class="bar" id="topBar" hidden>
+      <select id="selSorteo" aria-label="Sorteo"></select>
+      <button id="btnBuscar" class="primary" type="button">Buscar último sorteo</button>
+    </div>
+  </div>
+  <div class="status" id="status" role="status"></div>
+
+  <div class="chooser card" id="chooser">
+    <h2>¿Qué jugadas querés controlar?</h2>
+    <div class="choices">
+      <button type="button" data-pick="b1">Números Familia</button>
+      <button type="button" data-pick="b2">Jugadas de lxs Divinxs</button>
+    </div>
+  </div>
+
+  <div id="main" class="main" hidden>
+  <div class="meta" id="meta"><span class="k">Cargando sorteo…</span></div>
+
+  <div class="bar grupo">
+    <h2 id="grupoNombre"></h2>
+    <button type="button" id="btnCambiar">Elegir otro grupo</button>
+  </div>
+
+  <div class="card tablebox">
+    <table>
+      <thead><tr><th>Nuestros números</th><th>Tradicional</th><th>La Segunda</th><th>Revancha</th><th>Siempre Sale</th><th>Pozo Extra</th></tr></thead>
+      <tbody id="tb"><tr><td colspan="6" class="empty">Las jugadas del grupo elegido aparecen acá apenas carga el sorteo.</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="resumen" id="resumen"></div>
+
+  <details id="detNums">
+    <summary>Ver números del sorteo</summary>
+    <div class="dbody" id="sorteoNums"></div>
+  </details>
+
+  <details id="detEdit">
+    <summary id="editSum">Editar jugadas</summary>
+    <div class="dbody" id="editor"></div>
+  </details>
+  </div>
+
+  <div class="foot">Fuente: extracto oficial de la Lotería de Santa Fe. Al abrir el programa se busca solo el último sorteo.</div>
+</div>
+
+<script>
+const MODS=[{k:"tradicional",l:"Tradicional"},{k:"segunda",l:"La Segunda"},{k:"revancha",l:"Revancha"},{k:"siempreSale",l:"Siempre Sale"},{k:"pozoExtra",l:"Pozo Extra"}];
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const NOMBRES={b1:"Números Familia",b2:"Jugadas de lxs Divinxs"};
+const S={sorteos:[],busq:{},sel:null,filtro:null,canWrite:true};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const f2=n=>String(n).padStart(2,"0");
+const money=v=>typeof v==="number"?new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",minimumFractionDigits:2}).format(v):"monto no publicado";
+const parseNums=s=>String(s).trim().split(/[\s,;.\-]+/).filter(Boolean).map(Number);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function setStatus(msg,warn){const el=$("status");el.textContent=msg||"";el.className="status"+(warn&&msg?" warn":"")}
+
+function evalJugada(nums,s){
+  const r={};let total=0,premiada=false,pend=false;
+  for(const m of MODS){
+    const md=s[m.k];
+    if(!md||!Array.isArray(md.nums)){r[m.k]=null;continue}
+    const h=nums.filter(n=>md.nums.includes(n));
+    let prize=null;
+    if(m.k==="siempreSale"){
+      if(md.aciertos&&h.length>=md.aciertos)prize={monto:md.premio};
+    }else if(m.k==="pozoExtra"){
+      const ganoPrimero=["tradicional","segunda","revancha"].some(k=>r[k]&&r[k].hits.length===6);
+      if(h.length===6&&!ganoPrimero)prize={monto:md.premio};
+    }else{
+      const p=md.premios&&md.premios[String(h.length)];
+      if(p)prize={monto:p.premio};
+    }
+    r[m.k]={hits:h,prize};
+    if(prize){premiada=true;if(typeof prize.monto==="number")total+=prize.monto;else pend=true}
+  }
+  return{r,premiada,total,pend};
+}
+
+function jugadasVisibles(){
+  const out=[];
+  for(const j of (S.busq[S.filtro]?.jugadas||[])){const n=parseNums(j);if(n.length===6)out.push(n)}
+  return out;
+}
+
+function render(){
+  const s=S.sorteos.find(x=>x.nro===S.sel);
+  const sel=$("selSorteo");
+  sel.innerHTML=S.sorteos.length?S.sorteos.map(x=>`<option value="${x.nro}"${x.nro===S.sel?" selected":""}>Sorteo ${x.nro} · ${esc(x.fechaCorta||"")}</option>`).join(""):"<option>Sin sorteos guardados</option>";
+  if(!s){
+    $("meta").innerHTML='<span class="k">Todavía no hay un sorteo guardado. Tocá “Buscar último sorteo”.</span>';
+    $("tb").innerHTML='<tr><td colspan="6" class="empty">Sin sorteo para controlar.</td></tr>';
+    $("resumen").innerHTML="";$("sorteoNums").innerHTML="";renderEditor();return;
+  }
+  $("meta").innerHTML=`<span><span class="k">Fecha del sorteo:</span> <span class="v">${esc(s.fechaTexto)}</span></span><span><span class="k">Sorteo n.º</span> <span class="v">${s.nro}</span></span>`;
+  const js=jugadasVisibles();
+  if(!js.length){
+    $("tb").innerHTML=`<tr><td colspan="6" class="empty">${esc(NOMBRES[S.filtro]||"Este grupo")} no tiene jugadas. Agregalas en “Editar jugadas”.</td></tr>`;
+  }else{
+    $("tb").innerHTML=js.map(n=>{
+      const ev=evalJugada(n,s);
+      return `<tr><td class="mine">${n.map(f2).join(" ")}</td>`+MODS.map(m=>{
+        const c=ev.r[m.k];
+        if(!c)return '<td class="zero"><span class="cnt">—</span></td>';
+        const cls=c.prize?"prize":(c.hits.length?"":"zero");
+        return `<td class="${cls}"><span class="cnt">${c.hits.length}</span>${c.hits.length?`<span class="hn">${c.hits.map(f2).join(" ")}</span>`:""}${c.prize?`<span class="pz">PREMIADA · ${money(c.prize.monto)}</span>`:""}</td>`;
+      }).join("")+"</tr>";
+    }).join("");
+  }
+  renderResumen(s,js);renderNums(s);renderEditor();
+}
+
+function renderResumen(s,js){
+  if(!js.length){$("resumen").innerHTML="";return}
+  const evs=js.map(n=>({n,ev:evalJugada(n,s)}));
+  const mxTS=Math.max(...js.map(n=>Math.max(n.filter(x=>s.tradicional?.nums.includes(x)).length,n.filter(x=>s.segunda?.nums.includes(x)).length)));
+  const minTS=Math.min(...Object.keys(s.tradicional?.premios||{4:1}).map(Number));
+  let best=evs[0];evs.forEach(e=>{if((e.ev.r.pozoExtra?.hits.length||0)>(best.ev.r.pozoExtra?.hits.length||0))best=e});
+  const prem=evs.filter(e=>e.ev.premiada).length;
+  const total=evs.reduce((a,e)=>a+e.ev.total,0);
+  const pend=evs.some(e=>e.ev.pend);
+  const ss=s.siempreSale||{};
+  const g=ss.ganadores;
+  $("resumen").innerHTML=`<ul>
+<li><b>Tradicional y La Segunda:</b> hacían falta al menos ${minTS} aciertos. El máximo de tus jugadas fue ${mxTS}.</li>
+<li><b>Revancha:</b> hacían falta 6 aciertos.</li>
+<li><b>Siempre Sale:</b> esta vez pagó a quien acertó ${ss.aciertos??"?"}. Hubo ${g??"?"} ganador${g===1?"":"es"}.</li>
+<li><b>Pozo Extra:</b> hacía falta que los 6 números estuvieran entre los ganadores. Lo más cerca fue la jugada ${best.n.map(f2).join(" ")}, con ${best.ev.r.pozoExtra?.hits.length||0}.</li>
+</ul>
+<div class="tot"><b>Resumen:</b> ${js.length} jugadas controladas, ${prem} premiada${prem===1?"":"s"}, ${js.length-prem} sin premio. Dinero ganado: ${money(total)}${pend?" (más premios con monto no publicado)":""}${total===0&&!prem?" (seguimos perdiendo guita, nos falta suerte)":" ¡Hay premio!"}</div>`;
+}
+
+function renderNums(s){
+  $("sorteoNums").innerHTML=MODS.map(m=>{
+    const md=s[m.k];if(!md)return"";
+    return `<div class="modrow"><span class="ml">${m.l}</span><div class="balls">${md.nums.map(n=>`<span class="ball">${f2(n)}</span>`).join("")}</div></div>`;
+  }).join("");
+}
+
+function renderEditor(){
+  const ed=$("editor");
+  const open={};ed.querySelectorAll("input").forEach(i=>open[i.id]=i.value);
+  $("editSum").textContent="Editar jugadas"+(S.filtro?" de "+NOMBRES[S.filtro]:"");
+  ed.innerHTML=(S.filtro?[S.filtro]:[]).map(id=>{
+    const b=S.busq[id]||{jugadas:[]};
+    return `<div class="bq"><h2>${esc(NOMBRES[id])}</h2>
+${(b.jugadas||[]).map((j,k)=>`<div class="jg"><span class="nums">${esc(parseNums(j).map(f2).join(" "))}</span>${S.canWrite?`<button type="button" data-del="${id}:${k}" aria-label="Quitar jugada">Quitar</button>`:""}</div>`).join("")||'<span class="foot">Sin jugadas.</span>'}
+${S.canWrite?`<div class="add"><input type="text" id="in_${id}" inputmode="numeric" placeholder="6 números, ej: 03 15 22 27 38 41" value="${esc(open["in_"+id]||"")}"><button type="button" data-add="${id}">Agregar</button></div><span class="err" id="err_${id}"></span>`:""}</div>`;
+  }).join("");
+}
+
+async function guardarBusqueda(id,jugadas){
+  if(!MODO_PC){
+    S.busq[id]={nombre:NOMBRES[id],jugadas};
+    try{localStorage.setItem("q6jugadas",JSON.stringify(S.busq));setStatus("Jugadas guardadas en este teléfono.")}
+    catch(_){setStatus("Este navegador no deja guardar: el cambio se pierde al cerrar.",true)}
+    render();return;
+  }
+  try{const b=await api("PUT","/api/busquedas/"+id,{jugadas});S.busq[id]=b;render()}
+  catch(e){setStatus("No se pudo guardar el cambio: "+e.message,true)}
+}
+
+$("editor").addEventListener("click",e=>{
+  const add=e.target.closest("[data-add]"),del=e.target.closest("[data-del]");
+  if(add){
+    const id=add.dataset.add,inp=$("in_"+id),err=$("err_"+id);
+    const n=parseNums(inp.value);
+    if(n.length!==6||n.some(x=>!Number.isInteger(x)||x<0||x>45)||new Set(n).size!==6){err.textContent="Poné 6 números distintos entre 00 y 45.";return}
+    err.textContent="";
+    const j=[...(S.busq[id]?.jugadas||[]),n.sort((a,b)=>a-b).map(f2).join(" ")];
+    inp.value="";guardarBusqueda(id,j);
+  }
+  if(del){
+    const[id,k]=del.dataset.del.split(":");
+    const j=[...(S.busq[id]?.jugadas||[])];j.splice(+k,1);guardarBusqueda(id,j);
+  }
+});
+$("editor").addEventListener("input",e=>{const err=e.target.id&&$("err_"+e.target.id.slice(3));if(err)err.textContent=""});
+function elegir(id){
+  S.filtro=id;
+  $("grupoNombre").textContent=NOMBRES[id]||"";
+  $("chooser").hidden=!!id;$("main").hidden=!id;$("topBar").hidden=!id;
+  if(id)render();
+}
+$("btnCambiar").addEventListener("click",()=>{setStatus("");elegir(null)});
+$("chooser").addEventListener("click",e=>{const b=e.target.closest("button[data-pick]");if(b)elegir(b.dataset.pick)});
+$("selSorteo").addEventListener("change",e=>{S.sel=+e.target.value;render()});
+
+/* ---- datos: programa de la PC (api/) o app publicada (data/*.json + jugadas en el teléfono) ---- */
+let MODO_PC=false;
+async function getJSON(ruta){
+  const r=await fetch(ruta,{cache:"no-store"});
+  if(!r.ok)throw new Error("Error "+r.status);
+  return r.json();
+}
+async function api(metodo,ruta,body){
+  const r=await fetch(ruta,{method:metodo,headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||("Error "+r.status));
+  return j;
+}
+function aplicar(d){
+  S.sorteos=(d.sorteos||[]).slice().sort((a,b)=>b.nro-a.nro);
+  S.busq=d.busquedas||{};
+  if(!S.sorteos.some(x=>x.nro===S.sel))S.sel=S.sorteos[0]?.nro??null;
+  if(S.filtro)render();
+}
+async function cargarPublicado(){
+  const sorteos=await getJSON("data/sorteos.json");
+  let busquedas=null;
+  try{busquedas=JSON.parse(localStorage.getItem("q6jugadas")||"null")}catch(_){}
+  if(!busquedas)busquedas=await getJSON("data/jugadas.json");
+  aplicar({sorteos,busquedas});
+}
+async function buscarUltimo(auto){
+  const btn=$("btnBuscar");btn.disabled=true;
+  if(!MODO_PC){
+    setStatus("Buscando el último sorteo…");
+    try{
+      await cargarPublicado();
+      const s=S.sorteos[0];
+      setStatus(s?`Último sorteo: n.º ${s.nro} del ${s.fechaCorta}.`:"Todavía no hay sorteos publicados.");
+    }catch(e){
+      setStatus(navigator.onLine===false?"Sin conexión: se muestra el último sorteo guardado en el teléfono.":"No se pudo actualizar: "+e.message,true);
+    }finally{btn.disabled=false}
+    return;
+  }
+  setStatus("Buscando el último sorteo en la Lotería de Santa Fe…");
+  try{
+    const r=await api("POST","/api/buscar");
+    aplicar(await api("GET","/api/estado"));
+    S.sel=r.sorteo.nro;if(S.filtro)render();
+    setStatus(r.nuevo?`Nuevo sorteo cargado: n.º ${r.sorteo.nro} del ${r.sorteo.fechaCorta}.`:`Último sorteo: n.º ${r.sorteo.nro} del ${r.sorteo.fechaCorta}. Ya estaba al día.`);
+  }catch(e){
+    setStatus((auto?"No se pudo actualizar el sorteo; se muestra el último guardado. ":"")+(e.message==="Failed to fetch"?"El programa no responde: volvé a abrirlo desde el ícono.":e.message),true);
+  }finally{btn.disabled=false}
+}
+$("btnBuscar").addEventListener("click",()=>buscarUltimo(false));
+(async()=>{
+  try{MODO_PC=(await getJSON("api/ping")).app==="quini6"}catch(_){}
+  if(MODO_PC){
+    try{aplicar(await api("GET","/api/estado"))}catch(e){setStatus("No se pudieron leer los datos guardados: "+e.message,true)}
+  }else if("serviceWorker" in navigator&&location.protocol==="https:"){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+  buscarUltimo(true);
+})();
+</script>
+</body>
+</html>
