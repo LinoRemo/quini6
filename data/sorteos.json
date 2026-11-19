@@ -1,5 +1,110 @@
 [
   {
+    "nro": 3427,
+    "fecha": "2026-11-18",
+    "fechaCorta": "18/11/2026",
+    "fechaTexto": "miércoles 18/11/2026",
+    "fuente": "Lotería de Santa Fe – extracto oficial (PDF)",
+    "actualizado": "2026-11-19T02:28:24.394Z",
+    "tradicional": {
+      "nums": [
+        3,
+        9,
+        20,
+        25,
+        37,
+        40
+      ],
+      "premios": {
+        "4": {
+          "ganadores": 1023,
+          "premio": 12060.13
+        },
+        "5": {
+          "ganadores": 22,
+          "premio": 1869319.64
+        },
+        "6": {
+          "ganadores": "VACANTE",
+          "premio": null
+        }
+      }
+    },
+    "segunda": {
+      "nums": [
+        7,
+        18,
+        20,
+        26,
+        28,
+        36
+      ],
+      "premios": {
+        "4": {
+          "ganadores": 2460,
+          "premio": 5547.85
+        },
+        "5": {
+          "ganadores": 30,
+          "premio": 1370834.4
+        },
+        "6": {
+          "ganadores": 1,
+          "premio": 3294600472.8
+        }
+      }
+    },
+    "revancha": {
+      "nums": [
+        0,
+        7,
+        14,
+        25,
+        29,
+        36
+      ],
+      "premios": {
+        "6": {
+          "ganadores": "VACANTE",
+          "premio": null
+        }
+      }
+    },
+    "siempreSale": {
+      "nums": [
+        8,
+        19,
+        20,
+        21,
+        33,
+        38
+      ],
+      "aciertos": 5,
+      "ganadores": 17,
+      "premio": 21702072.71
+    },
+    "pozoExtra": {
+      "nums": [
+        0,
+        3,
+        7,
+        9,
+        14,
+        18,
+        20,
+        25,
+        26,
+        28,
+        29,
+        36,
+        37,
+        40
+      ],
+      "ganadores": 333,
+      "premio": 600600.6
+    }
+  },
+  {
     "nro": 3426,
     "fecha": "2026-11-15",
     "fechaCorta": "15/11/2026",
